@@ -389,7 +389,7 @@ def fetch_news(stock_code="sh603259", max_pages=3):
     print(f"📰 总共获取到 {len(unique_news)} 条新闻（去重后）")
     print(f"📊 各数据源贡献: {source_results}")
     
-    return unique_news
+    return unique_news, source_results
 
 # 模块2：中文情绪分析 - 增强版本
 from snownlp import SnowNLP
@@ -895,6 +895,11 @@ def send_wechat(msg, title="wuxi_analysis分析结果"):
         print("微信推送失败:", e)
 
 if __name__ == "__main__":
+    import io, sys
+    buf = io.StringIO()
+    sys_stdout = sys.stdout
+    sys.stdout = buf
+
     print("=== 药明康德股票分析系统 ===")
     if OFFLINE_MODE:
         print("📱 当前运行模式：离线模式（使用模拟数据）")
@@ -907,9 +912,18 @@ if __name__ == "__main__":
         # 获取新闻数据
         if OFFLINE_MODE:
             news_list = generate_mock_news_data()
+            source_results = {'mock': len(news_list)}
             print(f"📰 生成 {len(news_list)} 条模拟新闻")
         else:
-            news_list = fetch_news(stock_code=stock['code'], max_pages=2)
+            news_list, source_results = fetch_news(stock_code=stock['code'], max_pages=2)
+        
+        # 新闻源统计信息
+        news_source_info = f"新闻总数：{len(news_list)} 条\n"
+        if source_results:
+            for src, count in source_results.items():
+                news_source_info += f" - {src}：{count} 条\n"
+        print("【新闻数据源统计】")
+        print(news_source_info)
         
         sentiment_label, pos_count, neu_count, neg_count, avg_score = analyze_sentiment(news_list)
         
@@ -917,6 +931,7 @@ if __name__ == "__main__":
         if OFFLINE_MODE:
             df = generate_mock_stock_data(stock['code'], days=100)
             print("📊 使用模拟股票数据")
+            tech_ind = None
         else:
             df, tech_ind = fetch_stock_data(stock_code=stock['code'])
             if tech_ind is None:
@@ -1014,7 +1029,6 @@ if __name__ == "__main__":
             import matplotlib.pyplot as plt
             import matplotlib.font_manager as fm
             
-            # 设置中文字体
             plt.rcParams['font.sans-serif'] = ['Arial Unicode MS', 'SimHei', 'DejaVu Sans']
             plt.rcParams['axes.unicode_minus'] = False
             
@@ -1043,28 +1057,10 @@ if __name__ == "__main__":
             for title in warning_news:
                 print(" -", title)
 
-        # 留出微信或邮箱推送接口（可接入 server酱、企业微信机器人）
-        # send_alert_via_wechat(f"{stock['name']} 建议：{suggestion}")
-        
         print("\n" + "="*50)
         print("✅ 分析完成！")
 
-        # 假设分析结果为 result_str
-        try:
-            result_str = ""
-            # ...原有分析代码...
-            # 如果有print输出，捕获为result_str
-            import io, sys
-            buf = io.StringIO()
-            sys_stdout = sys.stdout
-            sys.stdout = buf
-            # ====== 分析主逻辑开始 ======
-            # 请将你的主分析函数放在这里，例如：
-            # main()
-            # ====== 分析主逻辑结束 ======
-            sys.stdout = sys_stdout
-            result_str = buf.getvalue()
-            print(result_str)
-            send_wechat(result_str, "wuxi_analysis分析结果")
-        except Exception as e:
-            send_wechat(f"分析失败: {e}", "wuxi_analysis分析异常")
+    sys.stdout = sys_stdout
+    result_str = buf.getvalue()
+    print(result_str)
+    send_wechat(result_str, "wuxi_analysis分析结果")
