@@ -2,6 +2,8 @@ name: wuxi_analysis分析
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '30 0 * * *'  # 每天UTC 0:30（北京时间8:30）
 
 jobs:
   build:
