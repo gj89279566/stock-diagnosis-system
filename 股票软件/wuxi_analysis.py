@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 import json
+import os
 
 # 支持多股票分析（沪市加0，深市加1）
 stock_list = [
@@ -883,6 +884,16 @@ def save_result_to_file(sentiment_label, tech, suggestion, confidence, scores, f
 # macOS/Linux 用户可添加 cron 任务，例如：
 # 0 9 * * * /usr/bin/python3 /路径/wuxi_analysis.py >> /路径/log.txt 2>&1
 
+def send_wechat(msg, title="wuxi_analysis分析结果"):
+    SCKEY = os.getenv('SERVERCHAN_KEY', "SCT288761Tm49DLoHpETtgBZVHFLHmwvag")
+    url = f"https://sctapi.ftqq.com/{SCKEY}.send"
+    data = {"title": title, "desp": msg}
+    try:
+        resp = requests.post(url, data=data, timeout=10)
+        print("微信推送结果:", resp.text)
+    except Exception as e:
+        print("微信推送失败:", e)
+
 if __name__ == "__main__":
     print("=== 药明康德股票分析系统 ===")
     if OFFLINE_MODE:
@@ -1037,3 +1048,23 @@ if __name__ == "__main__":
         
         print("\n" + "="*50)
         print("✅ 分析完成！")
+
+        # 假设分析结果为 result_str
+        try:
+            result_str = ""
+            # ...原有分析代码...
+            # 如果有print输出，捕获为result_str
+            import io, sys
+            buf = io.StringIO()
+            sys_stdout = sys.stdout
+            sys.stdout = buf
+            # ====== 分析主逻辑开始 ======
+            # 请将你的主分析函数放在这里，例如：
+            # main()
+            # ====== 分析主逻辑结束 ======
+            sys.stdout = sys_stdout
+            result_str = buf.getvalue()
+            print(result_str)
+            send_wechat(result_str, "wuxi_analysis分析结果")
+        except Exception as e:
+            send_wechat(f"分析失败: {e}", "wuxi_analysis分析异常")
