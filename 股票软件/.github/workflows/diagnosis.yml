@@ -1,0 +1,34 @@
+name: 数据源诊断
+
+on:
+  schedule:
+    # 每天早上8点执行（UTC时间，北京时间16点）
+    - cron: '0 8 * * *'
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v3
+      
+    - name: 设置Python环境
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: 安装依赖
+      run: |
+        pip install requests beautifulsoup4
+        
+    - name: 执行数据源诊断
+      run: |
+        cd 股票软件
+        python 数据源故障诊断.py
+        
+    - name: 显示执行结果
+      run: |
+        echo "数据源诊断完成！"
+        echo "时间: $(date)" 
