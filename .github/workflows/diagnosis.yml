@@ -1,4 +1,4 @@
-name: 数据源诊断
+name: wuxi_analysis分析
 
 on:
   schedule:
