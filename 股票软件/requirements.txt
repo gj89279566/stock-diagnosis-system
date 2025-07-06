@@ -5,3 +5,4 @@ numpy
 snownlp
 matplotlib 
 bs4
+feedparser
